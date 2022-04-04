@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-
+// BlinkControl component is attached to the mesh of Sara virtual human in addition to Skinned Mesh Renderer component
 public class BlinkControl : MonoBehaviour {
 
     SkinnedMeshRenderer skinMeshRenderer;

@@ -1,4 +1,4 @@
-﻿/*
+/*
   Copyright 2016 Utrecht University http://www.uu.nl/
    
   This software has been created in the context of the EU-funded RAGE project.
@@ -129,6 +129,21 @@ namespace BMLNet
         /// </summary>
         /// <param name="realizer"></param> The realizer
         public void Update(RageBMLNet bmlNet)
+        // called from Update() of RageBMLNet as follows:
+
+        //   public void Update(float deltaTime)
+        // {
+        //     timer += deltaTime;
+
+        //     foreach (KeyValuePair<string, BMLBlock> block in scheduledBlocks)
+        //     {
+        //         foreach (KeyValuePair<string, BMLSyncPoint> syncPoint in block.Value.syncPoints)
+        //         {
+        //             syncPoint.Value.Update(this); // BMLSyncPoint.Update(bml), where bml = new RageBMLNet() for each syncPoint
+        //         }
+        //     }
+        // }
+
         {
             // do not need to check if this synpoint is already completed.
             // TODO busy waiting ?
@@ -138,7 +153,7 @@ namespace BMLNet
             // check if the timer is safe to used.
             if (IsTimerSafe(bmlNet.ScheduledBlocks, bmlNet.Timer))
             {
-                if (bmlNet.Timer >= timer)
+                if (bmlNet.Timer >= timer) // timer = the global clock
                 {
                     // complete this syncpoint
                     TriggerSyncPoint(); // BMLSyncPoint.TriggerSyncPoint()
@@ -162,9 +177,9 @@ namespace BMLNet
                         //realizer.RemoveBlock(parentBlock);
                     }
 
-                }
-            }
-        }
+                } //  if (bmlNet.Timer >= timer)
+            } //   if (IsTimerSafe(bmlNet.ScheduledBlocks, bmlNet.Timer))
+        } //  public void Update(RageBMLNet bmlNet)
 
         /// <summary>
         /// trigger this syncpoint to complete

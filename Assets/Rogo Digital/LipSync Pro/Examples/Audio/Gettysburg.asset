@@ -1371,8 +1371,8 @@ MonoBehaviour:
   version: 1.51
   length: 13.794467
   transcript: Four score and seven years ago, our fathers brought forth on this continent
-    a new nation, conceived in liberty and dedicated to the proposition that all men
-    are created equal.
+    a new nation, conceived in liberty and dedicated to the proposition that all
+    men are created equal.
   phonemePoseCurves: []
   emotionPoseCurves: []
   targetComponentID: 5114

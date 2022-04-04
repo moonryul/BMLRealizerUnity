@@ -173,11 +173,11 @@ namespace AssetPackage
         public void ParseFromFile(string filename)
         {
             AssetManager.Instance.Log(Severity.Warning, "not supported yet in portable version");
-            //XmlTextReader reader = new XmlTextReader(filename);
-            //if (reader != null)
-            //    Parse(reader);
-            //else
-            //    AssetManager.Instance.Log(Severity.Warning, "file error");
+            XmlTextReader reader = new XmlTextReader(filename);
+            if (reader != null)
+                Parse(reader);
+            else
+                AssetManager.Instance.Log(Severity.Warning, "file error");
         }
 
         public void ParseFromString(string xml)
@@ -193,13 +193,13 @@ namespace AssetPackage
         /// <param name="deltaTime"></param> the time from last called
         public void Update(float deltaTime)
         {
-            timer += deltaTime;
+            timer += deltaTime; // update the global timer by deltaTime, the time interval between two successive update calls.
 
             foreach (KeyValuePair<string, BMLBlock> block in scheduledBlocks)
             {
                 foreach (KeyValuePair<string, BMLSyncPoint> syncPoint in block.Value.syncPoints)
                 {
-                    syncPoint.Value.Update(this); // BMLSyncPoint.Update(bml), where bml = new RageBMLNet() for each syncPoint
+                    syncPoint.Value.Update(this); // BMLSyncPoint.Update(bmlNet), where bmlNet = new RageBMLNet()
                 }
             }
         }
@@ -311,12 +311,12 @@ namespace AssetPackage
                                     scheduledBlocks.Add(((BMLBehavior)instance).id, (BMLBehavior)instance);
                                 }
                             }
-                        }
-                        break;
-                }
+                        } //  if (blocks.ContainsKey(reader.Name))
+                        break; // break out of the current CASE
+                } // switch (reader.NodeType)
 
-            }
-        }
+            } //   while (reader.Read())
+        } // private void Parse(XmlReader reader)
 
         private void ClearBlocks()
         {

@@ -47,7 +47,7 @@ public class HeadLookController : BMLNetBehaviour {
 			rootNode = transform;
 		}
 		
-		// Setup segments
+		// Setup segments: This loop has no effect because segments is empty
 		foreach (BendingSegment segment in segments) {
 			Quaternion parentRot = segment.firstTransform.parent.rotation;
 			Quaternion parentRotInv = Quaternion.Inverse(parentRot);
@@ -72,8 +72,8 @@ public class HeadLookController : BMLNetBehaviour {
 				segment.origRotations[i] = t.localRotation;
 				t = t.parent;
 			}
-		}
-	}
+		} // foreach (BendingSegment segment in segments) 
+	} // Start()
 	
 	void LateUpdate () {
         // always look at the target or look at forward
@@ -87,7 +87,7 @@ public class HeadLookController : BMLNetBehaviour {
         }
 
         if (active == false) // BMLNetBehaviour.active
-            return;
+            return; // active = true means "in progress"; active = false means the head look behaviour is completed
 
 		if (Time.deltaTime == 0)
 			return;
@@ -101,10 +101,11 @@ public class HeadLookController : BMLNetBehaviour {
 			}
 		}
 
-        active = false; // // BMLNetBehaviour.active was true
+        active = false; // // BMLNetBehaviour.active was true; set it to false tentatively; it will be true when the jead look behaviour is completed
 
-		// Handle each segment
+		// Handle each segment: This loop has no effect because segments is empty
 		foreach (BendingSegment segment in segments) {
+			
 			Transform t = segment.lastTransform;
 			if (overrideAnimation) {
 				for (int i=segment.chainLength-1; i>=0; i--) {
@@ -211,18 +212,34 @@ public class HeadLookController : BMLNetBehaviour {
 
             //Debug.Log(q);
 
-            // if this behavior finish
+            // if this behavior finish => Then 
             if (Mathf.Abs(hAngle) > Mathf.Epsilon || Mathf.Abs(vAngle) > Mathf.Epsilon)
             {
                 active = true;
             }
 
             segment.oldLookRotation = dividedRotation;
-		} // foreach (BendingSegment segment in segments) {
 
-        if (active  == false)
+		} // foreach (BendingSegment segment in segments)
+
+        if (active  == false) // this.active is made false in line 104 above. 
+                              // It was made true initially in controllerHead.SetBMLNetParam(block.getCharacterId(), behaviorID, eventName); 
+							  // in   SyncPointCompleted(string behaviorID, string eventName) in VirtualHumanController
         {
             TriggerEvent(); // // // BMLNetBehaviour.TriggerEvent()
+			// refer to:
+			
+	// 	protected void TriggerEvent()
+    // {
+    //     if (OnBehaviourCompleted != null)
+    //     {
+    //         Debug.Log("Trigger Event " + this.GetType() + " " + characterId + " " + behaviourId + " " + eventName);
+    //         OnBehaviourCompleted(this, characterId, behaviourId, eventName);
+    //         // will call: public void SetTrigger(BMLNetBehaviour obj, string characterId, string behaviorId, string eventName) in VirtualHumanController
+    //     }
+    // }
+
+			//////////////////////////
         }
 		
 		// Handle non affected joints

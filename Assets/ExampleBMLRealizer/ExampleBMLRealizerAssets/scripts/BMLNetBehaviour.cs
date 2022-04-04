@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class BMLNetBehaviour : MonoBehaviour {
@@ -9,24 +9,36 @@ public class BMLNetBehaviour : MonoBehaviour {
     public string eventName = "";
 
     public delegate void BehaviourCompleted(BMLNetBehaviour obj, string characterId, string behaviourId, string eventName);
-    public BehaviourCompleted OnBehaviourCompleted;  // controller.OnBehaviourCompleted += TriggerEvent in VirtualHumanController.cs
+    public BehaviourCompleted OnBehaviourCompleted;  
+    // controller.OnBehaviourCompleted += SetTrigger in  void SyncPointCompleted(string behaviorID, string eventName) in VirtualHumanController.cs
 
+
+    //void Start() {}
+    
+    //void Update() {}
     public void SetBMLNetParam(string characterId, string behaviourId, string eventname)
     {
         Debug.Log("set parameter " + characterId + " " + behaviourId + " " + eventname);
+        
         active = true;
+
         this.characterId = characterId;
         this.behaviourId = behaviourId;
         this.eventName = eventname;
     }
 
-    protected void TriggerEvent()
+    protected void TriggerEvent() // BMLNetBehaviour.TriggerEvent() is called in Child Components such as HeadLookController
     {
         if (OnBehaviourCompleted != null)
         {
             Debug.Log("Trigger Event " + this.GetType() + " " + characterId + " " + behaviourId + " " + eventName);
             OnBehaviourCompleted(this, characterId, behaviourId, eventName);
+            // This call of the delegate OnBehaviourCompleted will call the event handler added to it:
+            //  SetTriggerSyncPoint(BMLNetBehaviour obj, string characterId, string behaviorId, string eventName) in VirtualHumanController
         }
     }
+
+   
+
 
 }

@@ -8,7 +8,7 @@ public class VirtualHumanController : MonoBehaviour {
 
     SpVoice voice;
 
-    RageBMLNet bml = new RageBMLNet();
+    RageBMLNet bmlNet = new RageBMLNet();
 
 	// Use this for initialization
 	void Start () {
@@ -18,18 +18,20 @@ public class VirtualHumanController : MonoBehaviour {
         voice.Rate = 0;
 
         // try to parse XML
-        bml.ParseFromFile("Assets/ExampleBMLRealizer/ExampleBMLRealizerAssets/BML.xml");
+        bmlNet.ParseFromFile("Assets/ExampleBMLRealizer/ExampleBMLRealizerAssets/BML.xml");
+        // or ParseFromString(string xml)
 
         // add callback for BMLNet
-        bml.OnSyncPointCompleted += SyncPointCompleted; // when blm.OnSyncPointCompleted delegate is called, SyncPointCompleted will be called along with other 
-                                                        // event handler functions added to the delegate variable. 
+        bmlNet.OnSyncPointCompleted += SyncPointCompleted; 
+        // when blm.OnSyncPointCompleted delegate is called, SyncPointCompleted will be called [together  with other 
+        // event handler functions added to the delegate bml.OnSyncPointCompleted]. 
 
     }
 	
 	// Update is called once per frame
 	void Update () {
-        // for every update, need to update BMLNet
-        bml.Update(Time.deltaTime);
+        // for every update of the virtual human, need to update BMLNet
+        bmlNet.Update(Time.deltaTime);
 	}
 
     /// <summary>
@@ -43,14 +45,14 @@ public class VirtualHumanController : MonoBehaviour {
     // the following event handler.
     void SyncPointCompleted(string behaviorID, string eventName)
     {
-        BMLBlock block = bml.GetBehaviorFromId(behaviorID);
+        BMLBlock block = bmlNet.GetBehaviorFromId(behaviorID);
 
         // get the character that will performs
         GameObject character = GameObject.Find(block.getCharacterId());
 
         Debug.Log(block.getCharacterId() + " " + behaviorID + " " + eventName);
 
-        // cannot find the character
+        // cannot find the character: This also holds for the top level block whose parent is null
         if (character == null)
             return;
 
@@ -84,17 +86,34 @@ public class VirtualHumanController : MonoBehaviour {
             GameObject target = GameObject.Find(gaze.target);
             if (target != null)
             {
-                HeadLookController controller = character.GetComponent<HeadLookController>();
-                if (controller != null)
+                HeadLookController controllerHead = character.GetComponent<HeadLookController>();
+                 // controllerHead.active = false when an instance of HeadLookController is created
+                if (controllerHead != null)
                 {
                     // setting parameter for behaviour
-                    controller.targetNode = target.transform;
+                    controllerHead.targetNode = target.transform;
 
                     // setting parameter for callback
-                    controller.SetBMLNetParam(block.getCharacterId(), behaviorID, eventName);
+                    controllerHead.SetBMLNetParam(block.getCharacterId(), behaviorID, eventName);
+                    // This call will set active = true among others.
+
+    // refer to:
+    // public void SetBMLNetParam(string characterId, string behaviourId, string eventname)
+    // {
+    //     Debug.Log("set parameter " + characterId + " " + behaviourId + " " + eventname);
+        
+    //     active = true; // this.active = active
+
+    //     this.characterId = characterId;
+    //     this.behaviourId = behaviourId;
+    //     this.eventName = eventname;
+    // }
+
 
                     // add callback
-                    controller.OnBehaviourCompleted += SetTrigger; // SetTrigger() will be called when controller.OnBehaviourCompleted(,,) will be called
+                    controllerHead.OnBehaviourCompleted += SetTriggerSyncPoint;
+                     // SetTriggerSyncPoint() will be called when controller.OnBehaviourCompleted(,,) will be called in BMLNetBehaviour:
+                     // controller.OnBehaviourCompleted(BMLNetBehaviour obj, string characterId, string behaviorId, string eventName)
                 }
             }
 
@@ -111,8 +130,8 @@ public class VirtualHumanController : MonoBehaviour {
 
             Animator animator = character.GetComponentInChildren<Animator>();
 
-            if (gesture.id == "gesture1")
-                animator.SetTrigger("Show");
+            if (gesture.id == "gesture1") // Only one gesture called "gesture1" has been implemented
+                animator.SetTrigger("Show"); // "gesture1" is implemented by means of animator component attached to the character, Sara.
 
 
         }
@@ -171,19 +190,20 @@ public class VirtualHumanController : MonoBehaviour {
     }
 
     /// <summary>
-    /// this function helper will be called from every sync point that need to be triggered from Unity.
+    /// this function helper will be called from every sync point that need to be triggered from Unity
+    /// See   controllerHead.OnBehaviourCompleted += SetTrigger above
     /// </summary>
-    /// <param name="obj"></param>
+    /// <param name="behaviour"></param>
     /// <param name="characterId"></param>
     /// <param name="behaviorId"></param>
     /// <param name="eventName"></param>
-    public void SetTrigger(BMLNetBehaviour obj, string characterId, string behaviorId, string eventName)
+    public void SetTriggerSyncPoint(BMLNetBehaviour behaviour, string characterId, string behaviorId, string eventName)
     {
         // remove the callback
-        obj.OnBehaviourCompleted -= SetTrigger;
+        behaviour.OnBehaviourCompleted -= SetTriggerSyncPoint;
 
         // trigger BMLNet callback
-        bml.TriggerSyncPoint(behaviorId, eventName);
+        bmlNet.TriggerSyncPoint(behaviorId, eventName);
 
         //  public void TriggerSyncPoint(string id, string eventName) // BMLNet.TriggerSyncPoint( , )
         // {
