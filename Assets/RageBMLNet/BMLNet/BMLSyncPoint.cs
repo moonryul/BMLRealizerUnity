@@ -40,12 +40,12 @@ namespace BMLNet
         /// <summary>
         /// the event name of this sync point (start, ready, strokeStart, attackPeak, stroke, strokeEnd, relax, end)
         /// </summary>
-        private string eventName;
+        private string syncEventName;
 
         /// <summary>
         /// timer of this sync point. if this sync point have dependency, then timer will hold the offset value after the dependency is completed
         /// </summary>
-        private float timer = 0.0f;
+        private float syncPointTimer = 0.0f;
 
         /// <summary>
         /// the ID of BML block which triggerBlockId is resided (optional)
@@ -65,21 +65,21 @@ namespace BMLNet
         /// <summary>
         /// flag whether this sync point is completed or not
         /// </summary>
-        private bool completed;
+        private bool syncPointCompleted;
 
 
         /// <summary>
         /// the contructor of BML Sync Point.
         /// </summary>
-        /// <param name="eventName"></param> the name of sync point event (start, ready, strokeStart, attackPeak, stroke, strokeEnd, relax, end)
+        /// <param name="syncEventName"></param> the name of sync point event (start, ready, strokeStart, attackPeak, stroke, strokeEnd, relax, end)
         /// <param name="value"></param> the atribute value that we need to parse.
-        public BMLSyncPoint(BMLBlock parent, string eventName, string value)
+        public BMLSyncPoint(BMLBlock parent, string syncEventName, string value)
         {
             parentBlock = parent;
 
-            completed = false;
+            syncPointCompleted = false;
 
-            this.eventName = eventName;
+            this.syncEventName = syncEventName;
 
             if (value != null)
             {
@@ -120,7 +120,7 @@ namespace BMLNet
                     }
                 }
 
-                timer = offset;
+                syncPointTimer = offset;
             }
         }
 
@@ -147,24 +147,24 @@ namespace BMLNet
         {
             // do not need to check if this synpoint is already completed.
             // TODO busy waiting ?
-            if (completed)
+            if (syncPointCompleted)
                 return;
 
             // check if the timer is safe to used.
             if (IsTimerSafe(bmlNet.ScheduledBlocks, bmlNet.Timer))
             {
-                if (bmlNet.Timer >= timer) // timer = the global clock
+                if (bmlNet.Timer >= syncPointTimer) // bmlNet.Timer is the global timer;  syncPointTimer = the timer of this sync point
                 {
-                    // complete this syncpoint
-                    TriggerSyncPoint(); // BMLSyncPoint.TriggerSyncPoint()
+                    // complete this syncpoint:  syncPointCompleted = true;
+                    TriggerSyncPoint(); // this.TriggerSyncPoint()
 
                     // call the event callback
-                    bmlNet.OnSyncPointCompleted(parentBlock.id, eventName); 
+                    bmlNet.OnSyncPointCompleted(parentBlock.id, syncEventName); // event completion check is done every frame, that is, deltaTime, e.g. 20ms
                     // refer to bml.OnSyncPointedCompleted += SyncPointCompleted, where bml == bmlnet
                     // note that SyncPointCompleted is defined in VirtualHumanController.cs.
 
                     // if the eventName is 'end' than this behavior completed.
-                    if (eventName == "end")
+                    if (syncEventName == "end")
                     {
                         // if all bml inside this bml are already finish
                         if (parentBlock.parentBml.IncreaseEndChild())
@@ -187,10 +187,10 @@ namespace BMLNet
         /// <returns></returns>
         public bool TriggerSyncPoint()
         {
-            if (!completed)
+            if (!syncPointCompleted)
             {
                 // TODO: need to check, which one is better. Only set complete variable or destroy the object ??
-                completed = true;
+                syncPointCompleted = true;
                 return true;
             }
 
@@ -203,15 +203,15 @@ namespace BMLNet
         /// <returns></returns>
         public bool IsCompleted()
         {
-            return completed;
+            return syncPointCompleted;
         }
 
         /// <summary>
-        /// function to check whether the timer variable is safe to used or not
+        /// function to check whether the timer variable is safe to use or not
         /// </summary>
         /// <param name="realizer"></param>
         /// <returns></returns>
-        public bool IsTimerSafe(Dictionary<string, BMLBlock> blocks, float globalTimer)
+        public bool IsTimerSafe(Dictionary<string, BMLBlock> blocks, float globalTimer) // globalTimer = bmlNet.Timer
         {
             // if this <bml> tag is already started?
             BMLSyncPoint globalStartSyncPoint;
@@ -243,7 +243,7 @@ namespace BMLNet
                         if (triggerSyncPoint.IsCompleted())
                         {
                             // set timer with current realizer timer plus offset
-                            timer += globalTimer;
+                            syncPointTimer += globalTimer;
 
                             // to prevent setting timer more than one
                             triggerBlockId = "";

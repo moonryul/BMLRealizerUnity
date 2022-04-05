@@ -39,18 +39,18 @@ public class VirtualHumanController : MonoBehaviour {
     /// this function will be called from BMLNet library
     /// </summary>
     /// <param name="behaviorID"></param>
-    /// <param name="eventName"></param>
+    /// <param name="syncEventName"></param>
     /// 
-    // Note    bmlNet.OnSyncPointCompleted(parentBlock.id, eventName) in Update() of BMLSyncPoint.cs will call
+    // Note    bmlNet.OnSyncPointCompleted(parentBlock.id, syncEventName) in Update() of BMLSyncPoint.cs will call
     // the following event handler.
-    void SyncPointCompleted(string behaviorID, string eventName)
+    void SyncPointCompleted(string behaviorID, string syncEventName)
     {
         BMLBlock block = bmlNet.GetBehaviorFromId(behaviorID);
 
         // get the character that will performs
         GameObject character = GameObject.Find(block.getCharacterId());
 
-        Debug.Log(block.getCharacterId() + " " + behaviorID + " " + eventName);
+        Debug.Log(block.getCharacterId() + " " + behaviorID + " " + syncEventName);
 
         // cannot find the character: This also holds for the top level block whose parent is null
         if (character == null)
@@ -94,7 +94,7 @@ public class VirtualHumanController : MonoBehaviour {
                     controllerHead.targetNode = target.transform;
 
                     // setting parameter for callback
-                    controllerHead.SetBMLNetParam(block.getCharacterId(), behaviorID, eventName);
+                    controllerHead.SetBMLNetParam(block.getCharacterId(), behaviorID, syncEventName);
                     // This call will set active = true among others.
 
     // refer to:

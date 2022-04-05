@@ -44,7 +44,7 @@ public class HeadLookController : BMLNetBehaviour {
 
     void Start () {
 		if (rootNode == null) {
-			rootNode = transform;
+			rootNode = transform; // this.rootNote = base.transform
 		}
 		
 		// Setup segments: This loop has no effect because segments is empty

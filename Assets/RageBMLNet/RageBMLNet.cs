@@ -208,19 +208,19 @@ namespace AssetPackage
         /// this function can be called from "outside library" to trigger sync point. 
         /// </summary>
         /// <param name="id"></param> the ID of the block where the sync point is resided
-        /// <param name="eventName"></param> the event name of sync point (start, ready, strokeStart, attackPeak, stroke, strokeEnd, relax, end)
-        public void TriggerSyncPoint(string id, string eventName) // BMLNet.TriggerSyncPoint( , )
+        /// <param name="syncEventName"></param> the event name of sync point (start, ready, strokeStart, attackPeak, stroke, strokeEnd, relax, end)
+        public void TriggerSyncPoint(string id, string syncEventName) // BMLNet.TriggerSyncPoint( , )
         {
             if (scheduledBlocks.ContainsKey(id))
             {
-                if (scheduledBlocks[id].syncPoints.ContainsKey(eventName) == false)
+                if (scheduledBlocks[id].syncPoints.ContainsKey(syncEventName) == false)
                 {
                     // create a new sync point
-                    scheduledBlocks[id].syncPoints.Add(eventName, new BMLSyncPoint(scheduledBlocks[id], eventName, ""));
+                    scheduledBlocks[id].syncPoints.Add(syncEventName, new BMLSyncPoint(scheduledBlocks[id], syncEventName, ""));
                 }
 
-                // trigger sync point
-                scheduledBlocks[id].syncPoints[eventName].TriggerSyncPoint(); // BMLSyncPoint.TriggerSyncPoint() for a given block id and sync point with eventName
+                //  complete this syncpoint
+                scheduledBlocks[id].syncPoints[syncEventName].TriggerSyncPoint(); // BMLSyncPoint.TriggerSyncPoint() for a given block id and sync point with syncEventName
             }
         }
 

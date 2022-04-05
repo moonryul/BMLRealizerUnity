@@ -27,7 +27,9 @@ public class BMLNetBehaviour : MonoBehaviour {
         this.eventName = eventname;
     }
 
-    protected void TriggerEvent() // BMLNetBehaviour.TriggerEvent() is called in Child Components such as HeadLookController
+    protected void TriggerEvent() 
+    // BMLNetBehaviour.TriggerEvent() is called when the behaviour is completed; e.g. called from HeadLookController.LateUpdate()
+    // which is a subclass of this class BMLNetBehaviour
     {
         if (OnBehaviourCompleted != null)
         {
