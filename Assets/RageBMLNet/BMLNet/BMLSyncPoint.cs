@@ -45,8 +45,9 @@ namespace BMLNet
         /// <summary>
         /// timer of this sync point. if this sync point have dependency, then timer will hold the offset value after the dependency is completed
         /// </summary>
-        private float syncPointTimer = 0.0f;
+        //private float syncPointTimer = 0.0f;
 
+        public float syncPointTimer = 0.0f; // Added by Moon R. Jung for synpoint progress debugging, 2022/4/7
         /// <summary>
         /// the ID of BML block which triggerBlockId is resided (optional)
         /// </summary>
@@ -65,8 +66,10 @@ namespace BMLNet
         /// <summary>
         /// flag whether this sync point is completed or not
         /// </summary>
-        private bool syncPointCompleted;
 
+        // Replace private with public for debugging
+        //private bool syncPointCompleted;
+        public bool syncPointCompleted;
 
         /// <summary>
         /// the contructor of BML Sync Point.
@@ -75,15 +78,16 @@ namespace BMLNet
         /// <param name="value"></param> the atribute value that we need to parse.
         public BMLSyncPoint(BMLBlock parent, string syncEventName, string value)
         {
-            parentBlock = parent;
+            this.parentBlock = parent;
 
-            syncPointCompleted = false;
+            this.syncPointCompleted = false;
 
             this.syncEventName = syncEventName;
 
             if (value != null)
             {
                 float offset = 0.0f;
+
                 if (!float.TryParse(value, out offset))
                 {
                     // split between behavior id and sync id
@@ -98,36 +102,36 @@ namespace BMLNet
                         }
                         */
 
-                        triggerBlockId = offsetSplit[offsetSplit.Length - 2];
+                        this.triggerBlockId = offsetSplit[offsetSplit.Length - 2];
                         // split between sync id and offset
                         string[] offsetSplit2 = offsetSplit[offsetSplit.Length - 1].Split('+');
                         if (offsetSplit2.Length > 1)
                         {
                             // sync id
-                            triggerEventName = offsetSplit2[0];
+                            this.triggerEventName = offsetSplit2[0];
                             // offset
                             offset = float.Parse(offsetSplit2[1]);
                         }
                         else
                         {
                             // only sync id without offset
-                            triggerEventName = offsetSplit[offsetSplit.Length - 1];
+                            this.triggerEventName = offsetSplit[offsetSplit.Length - 1];
                         }
                     }
                     else
                     {
                         // not known!
                     }
-                }
+                }// if (!float.TryParse(value, out offset))
 
-                syncPointTimer = offset;
-            }
+                this.syncPointTimer = offset;
+            }//if (value != null)
         }
 
         /// <summary>
         /// function that need to be called everytime the realizer update is called
         /// </summary>
-        /// <param name="realizer"></param> The realizer
+        /// <param name="bmlNet"></param> The realizer
         public void Update(RageBMLNet bmlNet)
         // called from Update() of RageBMLNet as follows:
 
@@ -147,24 +151,31 @@ namespace BMLNet
         {
             // do not need to check if this synpoint is already completed.
             // TODO busy waiting ?
-            if (syncPointCompleted)
+            if (this.syncPointCompleted)
                 return;
 
             // check if the timer is safe to used.
             if (IsTimerSafe(bmlNet.ScheduledBlocks, bmlNet.Timer))
             {
-                if (bmlNet.Timer >= syncPointTimer) // bmlNet.Timer is the global timer;  syncPointTimer = the timer of this sync point
+                if (bmlNet.Timer >= this.syncPointTimer) // bmlNet.Timer is the global timer;  syncPointTimer = the timer of this sync point
                 {
-                    // complete this syncpoint:  syncPointCompleted = true;
-                    TriggerSyncPoint(); // this.TriggerSyncPoint()
+                    // complete this syncpoint: if syncPointCompleted is false, set it true;
+                    //TriggerSyncPoint(); // this.TriggerSyncPoint()
+                    // MJ: Replace TriggerSyncPoint() by the following:
+                    if (!this.syncPointCompleted)
+                    {
+                      // TODO: need to check, which one is better. Only set complete variable or destroy the object ??
+                     this.syncPointCompleted = true;
+               
+                    }
 
-                    // call the event callback
-                    bmlNet.OnSyncPointCompleted(parentBlock.id, syncEventName); // event completion check is done every frame, that is, deltaTime, e.g. 20ms
+                    // Invoke  onsyncPointCompleted event  callback
+                    bmlNet.OnSyncPointCompleted(parentBlock.id, this.syncEventName); // event completion check is done every frame, that is, deltaTime, e.g. 20ms
                     // refer to bml.OnSyncPointedCompleted += SyncPointCompleted, where bml == bmlnet
                     // note that SyncPointCompleted is defined in VirtualHumanController.cs.
 
                     // if the eventName is 'end' than this behavior completed.
-                    if (syncEventName == "end")
+                    if (this.syncEventName == "end")
                     {
                         // if all bml inside this bml are already finish
                         if (parentBlock.parentBml.IncreaseEndChild())
@@ -187,10 +198,10 @@ namespace BMLNet
         /// <returns></returns>
         public bool TriggerSyncPoint()
         {
-            if (!syncPointCompleted)
+            if (!this.syncPointCompleted)
             {
                 // TODO: need to check, which one is better. Only set complete variable or destroy the object ??
-                syncPointCompleted = true;
+                this.syncPointCompleted = true;
                 return true;
             }
 
@@ -203,11 +214,12 @@ namespace BMLNet
         /// <returns></returns>
         public bool IsCompleted()
         {
-            return syncPointCompleted;
+            return this.syncPointCompleted;
         }
 
         /// <summary>
-        /// function to check whether the timer variable is safe to use or not
+        /// function to check whether the timer variable is safe to use or not: 
+        // CheckThe reference point relative to which the offset value is measured is already resolved. 
         /// </summary>
         /// <param name="realizer"></param>
         /// <returns></returns>
@@ -240,10 +252,12 @@ namespace BMLNet
                     if (triggerBlock.syncPoints.TryGetValue(triggerEventName, out triggerSyncPoint))
                     {
                         // is the dependency syncpoint is completed?
-                        if (triggerSyncPoint.IsCompleted())
+                        if (triggerSyncPoint.IsCompleted())  // The trigger syncpoint like "gaze1:end" has been advanced, so that
+                                                             // global timer, blmNet.Timer, has the value which can be used
+                                                            // for the offset stored in this.syncPointTimer.
                         {
                             // set timer with current realizer timer plus offset
-                            syncPointTimer += globalTimer;
+                            this.syncPointTimer += globalTimer;
 
                             // to prevent setting timer more than one
                             triggerBlockId = "";

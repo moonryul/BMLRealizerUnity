@@ -35,7 +35,7 @@ public class VirtualHumanController : MonoBehaviour {
 	}
 
     /// <summary>
-    /// callback when there is sync point
+    /// callback when there is sync point that has been just encountered in the bml file
     /// this function will be called from BMLNet library
     /// </summary>
     /// <param name="behaviorID"></param>
@@ -47,12 +47,16 @@ public class VirtualHumanController : MonoBehaviour {
     {
         BMLBlock block = bmlNet.GetBehaviorFromId(behaviorID);
 
+        // by Moon Jung, 2022/4/7
+
+        Debug.Log( $"bmlNet.Timer={bmlNet.Timer}" );
+
         // get the character that will performs
         GameObject character = GameObject.Find(block.getCharacterId());
 
         Debug.Log(block.getCharacterId() + " " + behaviorID + " " + syncEventName);
 
-        // cannot find the character: This also holds for the top level block whose parent is null
+        // cannot find the character: This also holds for the top level block whose character  is null
         if (character == null)
             return;
 

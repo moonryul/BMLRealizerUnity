@@ -20,6 +20,8 @@
 // <author>Chris021</author>
 // <date>12/5/2016 11:53:54 AM</date>
 // <summary>Implements the RageBMLNet class</summary>
+
+using UnityEngine;
 namespace AssetPackage
 {
     using System;
@@ -199,7 +201,11 @@ namespace AssetPackage
             {
                 foreach (KeyValuePair<string, BMLSyncPoint> syncPoint in block.Value.syncPoints)
                 {
-                    syncPoint.Value.Update(this); // BMLSyncPoint.Update(bmlNet), where bmlNet = new RageBMLNet()
+                    // Added by Moon Jung, 2022/4/7 for syncPoint progress debugging
+                    BMLSyncPoint bmlSyncPoint = syncPoint.Value;
+                    bmlSyncPoint.Update(this); // tjis ==> bmlNet which is an instance of RageBMLNet
+
+                   // syncPoint.Value.Update(this); // BMLSyncPoint.Update(bmlNet), where bmlNet = new RageBMLNet()
                 }
             }
         }
@@ -220,8 +226,20 @@ namespace AssetPackage
                 }
 
                 //  complete this syncpoint
-                scheduledBlocks[id].syncPoints[syncEventName].TriggerSyncPoint(); // BMLSyncPoint.TriggerSyncPoint() for a given block id and sync point with syncEventName
-            }
+                // Added by Moon Jung, 2022/4/7 for synpoint progress debugging
+                BMLSyncPoint syncPoint = scheduledBlocks[id].syncPoints[syncEventName];
+                Debug.Log($"syncPointTimer = {syncPoint.syncPointTimer}");
+                //syncPoint.TriggerSyncPoint(); replace syncPoint.TriggerSyncPoint() by the following:
+
+                if (!syncPoint.syncPointCompleted) 
+                {
+                // TODO: need to check, which one is better. Only set complete variable or destroy the object ??
+                syncPoint.syncPointCompleted = true;
+               
+                }
+
+                //scheduledBlocks[id].syncPoints[syncEventName].TriggerSyncPoint(); // BMLSyncPoint.TriggerSyncPoint() for a given block id and sync point with syncEventName
+            } //             if (scheduledBlocks.ContainsKey(id))
         }
 
         /// <summary>
